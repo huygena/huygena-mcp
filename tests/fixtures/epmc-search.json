@@ -1,0 +1,239 @@
+{
+ "version": "6.9",
+ "hitCount": 49943,
+ "nextCursorMark": "AoJYhAUoMzgyNDM1MTI=",
+ "nextPageUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=protein+structure+prediction+deep+learning&cursorMark=AoJYhAUoMzgyNDM1MTI%3D&resultType=lite&pageSize=5&sort=CITED+desc&format=json",
+ "request": {
+  "queryString": "protein structure prediction deep learning",
+  "resultType": "lite",
+  "cursorMark": "*",
+  "pageSize": 5,
+  "sort": "CITED desc",
+  "synonym": false
+ },
+ "resultList": {
+  "result": [
+   {
+    "id": "34265844",
+    "source": "MED",
+    "pmid": "34265844",
+    "pmcid": "PMC8371605",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC8371605"
+     ]
+    },
+    "doi": "10.1038/s41586-021-03819-2",
+    "title": "Highly accurate protein structure prediction with AlphaFold.",
+    "authorString": "Jumper J, Evans R, Pritzel A, Green T, Figurnov M, Ronneberger O, Tunyasuvunakool K, Bates R, Žídek A, Potapenko A, Bridgland A, Meyer C, Kohl SAA, Ballard AJ, Cowie A, Romera-Paredes B, Nikolov S, Jain R, Adler J, Back T, Petersen S, Reiman D, Clancy E, Zielinski M, Steinegger M, Pacholska M, Berghammer T, Bodenstein S, Silver D, Vinyals O, Senior AW, Kavukcuoglu K, Kohli P, Hassabis D.",
+    "journalTitle": "Nature",
+    "issue": "7873",
+    "journalVolume": "596",
+    "pubYear": "2021",
+    "journalIssn": "0028-0836; 1476-4687; ",
+    "pageInfo": "583-589",
+    "pubType": "research support, non-u.s. gov't; research-article; journal article",
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 37989,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "Y",
+    "dbCrossReferenceList": {
+     "dbName": [
+      "PDB"
+     ]
+    },
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "pdb",
+      "doi"
+     ]
+    },
+    "firstPublicationDate": "2021-07-15",
+    "firstIndexDate": "2021-07-16"
+   },
+   {
+    "id": "34062119",
+    "source": "MED",
+    "pmid": "34062119",
+    "pmcid": "PMC8238499",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC8238499"
+     ]
+    },
+    "doi": "10.1016/j.cell.2021.04.048",
+    "title": "Integrated analysis of multimodal single-cell data.",
+    "authorString": "Hao Y, Hao S, Andersen-Nissen E, Mauck WM, Zheng S, Butler A, Lee MJ, Wilk AJ, Darby C, Zager M, Hoffman P, Stoeckius M, Papalexi E, Mimitou EP, Jain J, Srivastava A, Stuart T, Fleming LM, Yeung B, Rogers AJ, McElrath JM, Blish CA, Gottardo R, Smibert P, Satija R.",
+    "journalTitle": "Cell",
+    "issue": "13",
+    "journalVolume": "184",
+    "pubYear": "2021",
+    "journalIssn": "0092-8674; 1097-4172; ",
+    "pageInfo": "3573-3587.e29",
+    "pubType": "research support, non-u.s. gov't; research-article; journal article; research support, n.i.h., extramural",
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 15281,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "Y",
+    "dbCrossReferenceList": {
+     "dbName": [
+      "EMBL"
+     ]
+    },
+    "hasPDF": "N",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "geo",
+      "nct",
+      "doi"
+     ]
+    },
+    "firstPublicationDate": "2021-05-31",
+    "firstIndexDate": "2021-06-02"
+   },
+   {
+    "id": "31178118",
+    "source": "MED",
+    "pmid": "31178118",
+    "pmcid": "PMC6687398",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC6687398"
+     ]
+    },
+    "doi": "10.1016/j.cell.2019.05.031",
+    "title": "Comprehensive Integration of Single-Cell Data.",
+    "authorString": "Stuart T, Butler A, Hoffman P, Hafemeister C, Papalexi E, Mauck WM, Hao Y, Stoeckius M, Smibert P, Satija R.",
+    "journalTitle": "Cell",
+    "issue": "7",
+    "journalVolume": "177",
+    "pubYear": "2019",
+    "journalIssn": "0092-8674; 1097-4172; ",
+    "pageInfo": "1888-1902.e21",
+    "pubType": "research support, non-u.s. gov't; research-article; research support, u.s. gov't, non-p.h.s.; journal article; research support, n.i.h., extramural",
+    "isOpenAccess": "N",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 15001,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "Y",
+    "dbCrossReferenceList": {
+     "dbName": [
+      "EMBL"
+     ]
+    },
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "geo",
+      "arrayexpress",
+      "doi"
+     ]
+    },
+    "firstPublicationDate": "2019-06-06",
+    "firstIndexDate": "2019-06-12"
+   },
+   {
+    "id": "38718835",
+    "source": "MED",
+    "pmid": "38718835",
+    "pmcid": "PMC11168924",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC11168924"
+     ]
+    },
+    "doi": "10.1038/s41586-024-07487-w",
+    "title": "Accurate structure prediction of biomolecular interactions with AlphaFold 3.",
+    "authorString": "Abramson J, Adler J, Dunger J, Evans R, Green T, Pritzel A, Ronneberger O, Willmore L, Ballard AJ, Bambrick J, Bodenstein SW, Evans DA, Hung CC, O'Neill M, Reiman D, Tunyasuvunakool K, Wu Z, Žemgulytė A, Arvaniti E, Beattie C, Bertolli O, Bridgland A, Cherepanov A, Congreve M, Cowen-Rivers AI, Cowie A, Figurnov M, Fuchs FB, Gladman H, Jain R, Khan YA, Low CMR, Perlin K, Potapenko A, Savy P, Singh S, Stecula A, Thillaisundaram A, Tong C, Yakneen S, Zhong ED, Zielinski M, Žídek A, Bapst V, Kohli P, Jaderberg M, Hassabis D, Jumper JM.",
+    "journalTitle": "Nature",
+    "issue": "8016",
+    "journalVolume": "630",
+    "pubYear": "2024",
+    "journalIssn": "0028-0836; 1476-4687; ",
+    "pageInfo": "493-500",
+    "pubType": "research-article; journal article",
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 12534,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "pdb"
+     ]
+    },
+    "firstPublicationDate": "2024-05-08",
+    "firstIndexDate": "2024-05-09"
+   },
+   {
+    "id": "29788355",
+    "source": "MED",
+    "pmid": "29788355",
+    "pmcid": "PMC6030848",
+    "fullTextIdList": {
+     "fullTextId": [
+      "PMC6030848"
+     ]
+    },
+    "doi": "10.1093/nar/gky427",
+    "title": "SWISS-MODEL: homology modelling of protein structures and complexes.",
+    "authorString": "Waterhouse A, Bertoni M, Bienert S, Studer G, Tauriello G, Gumienny R, Heer FT, de Beer TAP, Rempfer C, Bordoli L, Lepore R, Schwede T.",
+    "journalTitle": "Nucleic Acids Res",
+    "issue": "w1",
+    "journalVolume": "46",
+    "pubYear": "2018",
+    "journalIssn": "0305-1048; 1362-4962; ",
+    "pageInfo": "W296-W303",
+    "pubType": "research support, non-u.s. gov't; research-article; journal article",
+    "isOpenAccess": "Y",
+    "inEPMC": "Y",
+    "inPMC": "Y",
+    "citedByCount": 10312,
+    "hasReferences": "Y",
+    "hasTextMinedTerms": "Y",
+    "hasDbCrossReferences": "N",
+    "hasPDF": "Y",
+    "hasBook": "N",
+    "hasSuppl": "Y",
+    "hasLabsLinks": "Y",
+    "hasTMAccessionNumbers": "Y",
+    "tmAccessionTypeList": {
+     "accessionType": [
+      "uniprot",
+      "pdb"
+     ]
+    },
+    "firstPublicationDate": "2018-07-01",
+    "firstIndexDate": "2018-05-23"
+   }
+  ]
+ }
+}

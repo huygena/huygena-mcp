@@ -1,0 +1,335 @@
+{
+ "status": "ok",
+ "message-type": "work",
+ "message-version": "1.0.0",
+ "message": {
+  "reference-count": 84,
+  "publisher": "Springer Science and Business Media LLC",
+  "issue": "7873",
+  "license": [
+   {
+    "start": {
+     "date-parts": [
+      [
+       2021,
+       7,
+       15
+      ]
+     ],
+     "date-time": "2021-07-15T00:00:00Z",
+     "timestamp": 1626307200000
+    },
+    "content-version": "tdm",
+    "delay-in-days": 0,
+    "URL": "https://creativecommons.org/licenses/by/4.0"
+   },
+   {
+    "start": {
+     "date-parts": [
+      [
+       2021,
+       7,
+       15
+      ]
+     ],
+     "date-time": "2021-07-15T00:00:00Z",
+     "timestamp": 1626307200000
+    },
+    "content-version": "vor",
+    "delay-in-days": 0,
+    "URL": "https://creativecommons.org/licenses/by/4.0"
+   }
+  ],
+  "published-print": {
+   "date-parts": [
+    [
+     2021,
+     8,
+     26
+    ]
+   ]
+  },
+  "abstract": "<jats:title>Abstract</jats:title>\n                  <jats:p>\n                    Proteins are essential to life, and understanding their structure can facilitate a mechanistic understanding of their function. Through an enormous experimental effort\n                    <jats:sup>1–4</jats:sup>\n                    , the structures of around 100,000 unique proteins have been determined\n                    <jats:sup>5</jats:sup>\n                    , but this represents a small fraction of the billions of known protein sequences\n                    <jats:sup>6,7</jats:sup>\n                    . Structural coverage is bottlenecked by the months to years of painstaking effort required to determine a single protein structure. Accurate computational approaches are needed to address this gap and to enable large-scale structural bioinformatics. Predicting the three-dimensional structure that a protein will adopt based solely on its amino acid sequence—the structure prediction component of the ‘protein folding problem’\n                    <jats:sup>8</jats:sup>\n                    —has been an important open research problem for more than 50 years\n                    <jats:sup>9</jats:sup>\n                    . Despite recent progress\n                    <jats:sup>10–14</jats:sup>\n                    , existing methods fall far short of atomic accuracy, especially when no homologous structure is available. Here we provide the first computational method that can regularly predict protein structures with atomic accuracy even in cases in which no similar structure is known. We validated an entirely redesigned version of our neural network-based model, AlphaFold, in the challenging 14th Critical Assessment of protein Structure Prediction (CASP14)\n                    <jats:sup>15</jats:sup>\n                    , demonstrating accuracy competitive with experimental structures in a majority of cases and greatly outperforming other methods. Underpinning the latest version of AlphaFold is a novel machine learning approach that incorporates physical and biological knowledge about protein structure, leveraging multi-sequence alignments, into the design of the deep learning algorithm.\n                  </jats:p>",
+  "DOI": "10.1038/s41586-021-03819-2",
+  "type": "journal-article",
+  "created": {
+   "date-parts": [
+    [
+     2021,
+     7,
+     15
+    ]
+   ],
+   "date-time": "2021-07-15T15:10:38Z",
+   "timestamp": 1626361838000
+  },
+  "page": "583-589",
+  "source": "Crossref",
+  "is-referenced-by-count": 47730,
+  "title": [
+   "Highly accurate protein structure prediction with AlphaFold"
+  ],
+  "prefix": "10.1038",
+  "volume": "596",
+  "author": [
+   {
+    "given": "John",
+    "family": "Jumper",
+    "sequence": "first"
+   },
+   {
+    "given": "Richard",
+    "family": "Evans",
+    "sequence": "additional"
+   },
+   {
+    "given": "Alexander",
+    "family": "Pritzel",
+    "sequence": "additional"
+   },
+   {
+    "given": "Tim",
+    "family": "Green",
+    "sequence": "additional"
+   },
+   {
+    "given": "Michael",
+    "family": "Figurnov",
+    "sequence": "additional"
+   },
+   {
+    "given": "Olaf",
+    "family": "Ronneberger",
+    "sequence": "additional"
+   },
+   {
+    "given": "Kathryn",
+    "family": "Tunyasuvunakool",
+    "sequence": "additional"
+   },
+   {
+    "given": "Russ",
+    "family": "Bates",
+    "sequence": "additional"
+   },
+   {
+    "given": "Augustin",
+    "family": "Žídek",
+    "sequence": "additional"
+   },
+   {
+    "given": "Anna",
+    "family": "Potapenko",
+    "sequence": "additional"
+   },
+   {
+    "given": "Alex",
+    "family": "Bridgland",
+    "sequence": "additional"
+   },
+   {
+    "given": "Clemens",
+    "family": "Meyer",
+    "sequence": "additional"
+   },
+   {
+    "given": "Simon A. A.",
+    "family": "Kohl",
+    "sequence": "additional"
+   },
+   {
+    "given": "Andrew J.",
+    "family": "Ballard",
+    "sequence": "additional"
+   },
+   {
+    "given": "Andrew",
+    "family": "Cowie",
+    "sequence": "additional"
+   },
+   {
+    "given": "Bernardino",
+    "family": "Romera-Paredes",
+    "sequence": "additional"
+   },
+   {
+    "given": "Stanislav",
+    "family": "Nikolov",
+    "sequence": "additional"
+   },
+   {
+    "given": "Rishub",
+    "family": "Jain",
+    "sequence": "additional"
+   },
+   {
+    "given": "Jonas",
+    "family": "Adler",
+    "sequence": "additional"
+   },
+   {
+    "given": "Trevor",
+    "family": "Back",
+    "sequence": "additional"
+   },
+   {
+    "given": "Stig",
+    "family": "Petersen",
+    "sequence": "additional"
+   },
+   {
+    "given": "David",
+    "family": "Reiman",
+    "sequence": "additional"
+   },
+   {
+    "given": "Ellen",
+    "family": "Clancy",
+    "sequence": "additional"
+   },
+   {
+    "given": "Michal",
+    "family": "Zielinski",
+    "sequence": "additional"
+   },
+   {
+    "given": "Martin",
+    "family": "Steinegger",
+    "sequence": "additional"
+   },
+   {
+    "given": "Michalina",
+    "family": "Pacholska",
+    "sequence": "additional"
+   },
+   {
+    "given": "Tamas",
+    "family": "Berghammer",
+    "sequence": "additional"
+   },
+   {
+    "given": "Sebastian",
+    "family": "Bodenstein",
+    "sequence": "additional"
+   },
+   {
+    "given": "David",
+    "family": "Silver",
+    "sequence": "additional"
+   },
+   {
+    "given": "Oriol",
+    "family": "Vinyals",
+    "sequence": "additional"
+   },
+   {
+    "given": "Andrew W.",
+    "family": "Senior",
+    "sequence": "additional"
+   },
+   {
+    "given": "Koray",
+    "family": "Kavukcuoglu",
+    "sequence": "additional"
+   },
+   {
+    "given": "Pushmeet",
+    "family": "Kohli",
+    "sequence": "additional"
+   },
+   {
+    "given": "Demis",
+    "family": "Hassabis",
+    "sequence": "additional"
+   }
+  ],
+  "member": "297",
+  "published-online": {
+   "date-parts": [
+    [
+     2021,
+     7,
+     15
+    ]
+   ]
+  },
+  "container-title": [
+   "Nature"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+   {
+    "URL": "https://www.nature.com/articles/s41586-021-03819-2.pdf",
+    "content-type": "application/pdf",
+    "content-version": "vor",
+    "intended-application": "text-mining"
+   },
+   {
+    "URL": "https://www.nature.com/articles/s41586-021-03819-2",
+    "content-type": "text/html",
+    "content-version": "vor",
+    "intended-application": "text-mining"
+   },
+   {
+    "URL": "https://www.nature.com/articles/s41586-021-03819-2.pdf",
+    "content-type": "application/pdf",
+    "content-version": "vor",
+    "intended-application": "similarity-checking"
+   }
+  ],
+  "deposited": {
+   "date-parts": [
+    [
+     2024,
+     12,
+     5
+    ]
+   ],
+   "date-time": "2024-12-05T11:08:10Z",
+   "timestamp": 1733396890000
+  },
+  "resource": {
+   "primary": {
+    "URL": "https://www.nature.com/articles/s41586-021-03819-2"
+   }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+   "date-parts": [
+    [
+     2021,
+     7,
+     15
+    ]
+   ]
+  },
+  "references-count": 84,
+  "URL": "https://doi.org/10.1038/s41586-021-03819-2",
+  "relation": {
+   "has-review": [
+    {
+     "id-type": "doi",
+     "id": "10.3410/f.740477161.793587441",
+     "asserted-by": "object"
+    },
+    {
+     "id-type": "doi",
+     "id": "10.3410/f.740477161.793588825",
+     "asserted-by": "object"
+    }
+   ]
+  },
+  "subject": [],
+  "published": {
+   "date-parts": [
+    [
+     2021,
+     7,
+     15
+    ]
+   ]
+  }
+ }
+}
