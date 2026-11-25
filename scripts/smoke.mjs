@@ -56,7 +56,7 @@ console.log(`code pin: ${d?.code?.repo}@${d?.code?.commit ?? "(not pinned)"} · 
 
 // Europe PMC can be slow; a timeout here is reported, not fatal.
 const s = await call("literature_search", { query: 'TITLE:"protein structure prediction"', limit: 3, sort: "cited", timeout_seconds: 45 });
-if (s.isError) console.log("(literature_search did not answer in time; not counted as a failure)");
+if (s.isError) console.log("(Europe PMC did not answer; reported as a tool error above, not counted as a smoke failure)");
 
 const v = await call("validate_manifest", { manifest: "examples/manifest.yaml" });
 if (!v.structuredContent?.ok) fail("validate_manifest: example should pass");
