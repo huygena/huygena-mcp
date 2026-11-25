@@ -1,0 +1,12 @@
+packages: []
+
+allowBuilds:
+  esbuild: true
+
+# package.json points at the GitHub repos, which is what `npx github:huygena/huygena-mcp`
+# and other consumers install. For development here and in CI, pnpm links the sibling
+# checkouts instead (../huygena-intake and ../huygena-verify, built first), so nothing is
+# fetched from GitHub and changes across the three repos can be tested together.
+overrides:
+  huygena-intake: link:../huygena-intake
+  huygena-verify: link:../huygena-verify

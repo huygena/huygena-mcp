@@ -1,0 +1,59 @@
+{
+  "name": "huygena-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Huygena: turn a paper link into a replication brief, draft and lint run manifests, hash evidence bundles, recompute claim verdicts and re-check certificates.",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/huygena/huygena-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huygena/huygena-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/huygena/huygena-mcp/issues"
+  },
+  "author": "Huygena",
+  "type": "module",
+  "bin": {
+    "huygena-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js",
+    "smoke": "node scripts/smoke.mjs",
+    "prepare": "tsup"
+  },
+  "keywords": [
+    "huygena",
+    "mcp",
+    "model-context-protocol",
+    "replication",
+    "reproducibility",
+    "science",
+    "desci",
+    "ai-agents",
+    "manifest",
+    "verification"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "huygena-intake": "github:huygena/huygena-intake",
+    "huygena-verify": "github:huygena/huygena-verify",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  },
+  "packageManager": "pnpm@12.16.1"
+}
