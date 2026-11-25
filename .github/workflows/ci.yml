@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # For development, pnpm-workspace.yaml overrides the two GitHub dependencies with
+    # link:../huygena-intake and link:../huygena-verify, so CI checks them out next to this repo:
+    #   <workspace>/main            -> this repo
+    #   <workspace>/huygena-intake  -> paper intake library
+    #   <workspace>/huygena-verify  -> manifest, bundle, verdict and certificate library
+    defaults:
+      run:
+        working-directory: main
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+      - uses: actions/checkout@v4
+        with:
+          repository: huygena/huygena-intake
+          path: huygena-intake
+      - uses: actions/checkout@v4
+        with:
+          repository: huygena/huygena-verify
+          path: huygena-verify
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: main/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            main/pnpm-lock.yaml
+            huygena-intake/pnpm-lock.yaml
+            huygena-verify/pnpm-lock.yaml
+      - name: Build huygena-intake
+        working-directory: huygena-intake
+        run: pnpm install --frozen-lockfile && pnpm build
+      - name: Build huygena-verify
+        working-directory: huygena-verify
+        run: pnpm install --frozen-lockfile && pnpm build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Server starts and answers over stdio
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | timeout 20 node dist/index.js | tee out.jsonl
+          grep -q '"name":"draft_manifest"' out.jsonl
