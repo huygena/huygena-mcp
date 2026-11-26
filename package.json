@@ -1,6 +1,6 @@
 {
   "name": "huygena-mcp",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "MCP server for Huygena: turn a paper link into a replication brief, draft and lint run manifests, hash evidence bundles, recompute claim verdicts and re-check certificates.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/huygena/huygena-mcp#readme",
@@ -45,8 +45,8 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
-    "huygena-intake": "github:huygena/huygena-intake",
-    "huygena-verify": "github:huygena/huygena-verify",
+    "huygena-intake": "github:huygena/huygena-intake#v0.7.0",
+    "huygena-verify": "github:huygena/huygena-verify#v0.2.0",
     "zod": "4.6.7"
   },
   "devDependencies": {

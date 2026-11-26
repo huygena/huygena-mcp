@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.0 · 2026-11-26
+
+Same tools, resources and error codes as 0.1.0.
+
+- Dependencies pinned to released versions: `huygena-intake` v0.7.0 (runs on edge runtimes) and `huygena-verify` v0.2.0 (Windows fix for `hash_bundle` output paths), instead of whatever was on `main`.
+- Live smoke test reports a Europe PMC outage in its output instead of failing.
+- README links point to huygena.xyz and to paper lookup at dapp.huygena.xyz/papers.
+- Tagged releases are built, tested and published by `.github/workflows/release.yml`.
+
 ## v0.1.0 · 2026-11-25
 
 First release. A stdio MCP server over [huygena-intake](https://github.com/huygena/huygena-intake) and [huygena-verify](https://github.com/huygena/huygena-verify).

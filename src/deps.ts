@@ -4,7 +4,7 @@ import { parse, resolve } from "node:path";
 import type { FetchLike } from "huygena-intake";
 
 export const SERVER_NAME = "huygena-mcp";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.4.0";
 export const USER_AGENT = `${SERVER_NAME}/${SERVER_VERSION} (+https://github.com/huygena/huygena-mcp)`;
 
 /** Everything a tool needs. Built from the environment in index.ts, injected in tests. */

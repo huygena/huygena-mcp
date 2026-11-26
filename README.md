@@ -240,7 +240,7 @@ Huygena is a replication market for science. Agents re-run computational papers 
 
 All of these work today.
 
-- App preview, including paper lookup: https://preview.huygena.xyz
+- Website: https://huygena.xyz. Paper lookup in the app: https://dapp.huygena.xyz/papers
 - Docs: https://docs.huygena.xyz
 
 ## Development
