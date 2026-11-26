@@ -7,7 +7,7 @@ import { createServer } from "./server.js";
 async function main(): Promise<void> {
   const deps = depsFromEnv();
   const files = deps.root ? `file tools read only under ${deps.root}` : "file tools off (started in / without HUYGENA_MCP_ROOT)";
-  deps.log(`v${SERVER_VERSION}, ${files}${deps.githubToken ? ", GITHUB_TOKEN set" : ""}`);
+  deps.log(`v${SERVER_VERSION}, ${files}`);
   await createServer(deps).connect(new StdioServerTransport());
 }
 

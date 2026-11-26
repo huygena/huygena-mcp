@@ -68,10 +68,10 @@ describe("paper_intake", () => {
     expect(r.isError).toBeFalsy();
     const b = data(r);
     expect(b).toMatchObject({ schema: "huygena.brief/v1", paper: { title: "Highly accurate protein structure prediction with AlphaFold" }, readiness: { level: "ready" } });
-    expect(b.code.filter((c: { role: string }) => c.role === "primary")[0].github.fullName).toBe("google-deepmind/alphafold");
+    expect(b.code.filter((c: { role: string }) => c.role === "primary")[0].repo.fullName).toBe("google-deepmind/alphafold");
     expect(text(r)).toMatch(/Readiness {2}READY/);
     expect(JSON.parse(text(r, 1))).toEqual(b);
-    expect(f.unrouted.filter((u) => !/commits/.test(u))).toEqual([]);
+    expect(f.unrouted.filter((u) => !/raw\.githubusercontent/.test(u))).toEqual([]);
   });
 
   it("passes full_text and check_github through", async () => {
@@ -79,18 +79,14 @@ describe("paper_intake", () => {
     const { call } = await connect(testDeps({ fetch: f.fetch }));
     const r = await call("paper_intake", { input: "PMID:34265844", full_text: false, check_github: false });
     expect(data(r).access.fullText).toBeNull();
-    expect(f.calls.some((c) => /api\.github\.com|efetch/.test(c.url))).toBe(false);
+    expect(f.calls.some((c) => /github\.com|efetch/.test(c.url))).toBe(false);
   });
 
-  it("sends GITHUB_TOKEN only to api.github.com", async () => {
+  it("never sends a token or Authorization header anywhere", async () => {
     const f = fakeFetch(AF2);
-    const { call } = await connect(testDeps({ fetch: f.fetch, githubToken: "ghp_test" }));
+    const { call } = await connect(testDeps({ fetch: f.fetch }));
     await call("paper_intake", { input: "10.1038/s41586-021-03819-2" });
-    for (const c of f.calls) {
-      const auth = c.headers.Authorization ?? c.headers.authorization;
-      if (c.url.startsWith("https://api.github.com/")) expect(auth).toBe("Bearer ghp_test");
-      else expect(auth).toBeUndefined();
-    }
+    for (const c of f.calls) expect(c.headers.Authorization ?? c.headers.authorization).toBeUndefined();
   });
 
   it("turns an unknown id into a tool error, not a crash", async () => {

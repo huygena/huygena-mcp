@@ -98,78 +98,80 @@ export async function draftManifest(deps: Deps, brief: Brief, opts: DraftOptions
   };
 }
 
+const GIT_HOSTS = ["github", "gitlab", "bitbucket", "codeberg"];
+
 function primaryCode(brief: Brief): CodeLink[] {
   const primary = brief.code.filter((c) => c.role === "primary");
-  const rank = (c: CodeLink) => (c.host === "github" ? (c.github?.status === "ok" ? 0 : c.github?.status === "unchecked" ? 1 : 3) : 2);
+  const rank = (c: CodeLink) => (c.repo?.status === "ok" ? 0 : c.repo?.status === "unchecked" ? 1 : 3);
   return [...primary].sort((a, b) => rank(a) - rank(b));
 }
 
 async function pickCode(deps: Deps, brief: Brief, opts: DraftOptions, warnings: string[]): Promise<DraftCode> {
-  const repos = primaryCode(brief).filter((c) => ["github", "gitlab", "bitbucket", "codeberg"].includes(c.host));
+  const repos = primaryCode(brief).filter((c) => GIT_HOSTS.includes(c.host));
   const first = repos[0];
   const others = repos.slice(1).map((c) => c.url);
   if (!first) return { repo: null, url: null, commit: null, commitSource: null, ref: null, note: "No repository link in the paper.", others };
 
-  const gh = first.host === "github" ? first.github : null;
-  const id = gh?.fullName ?? first.id;
+  const check = first.repo;
+  const id = check?.fullName ?? first.id;
   const host = new URL(first.url).host.replace(/^www\./, "");
   const repo = id ? `${host}/${id}` : null;
   const base = { repo, url: first.url, others };
+  const gitUrl = first.url.replace(/\/+$/, "").replace(/\.git$/i, "");
 
   if (first.ref && FULL_SHA.test(first.ref)) {
     return { ...base, commit: first.ref.toLowerCase(), commitSource: "paper_link", ref: null, note: "Commit taken from the link in the paper." };
   }
-  if (first.host !== "github" || !id) {
-    return { ...base, commit: null, commitSource: null, ref: first.ref, note: `Commits are only looked up on GitHub; check ${first.url} by hand.` };
+  if (check?.status === "not_found") {
+    return { ...base, commit: null, commitSource: null, ref: first.ref, note: `${first.url} is not reachable (private, deleted or moved without a redirect).` };
   }
-  if (gh?.status === "not_found") {
-    return { ...base, commit: null, commitSource: null, ref: first.ref, note: `${first.url} answers 404 on GitHub (deleted, private or moved without a redirect).` };
-  }
-  const ref = first.ref ?? gh?.defaultBranch ?? null;
+  const ref = first.ref ?? check?.defaultBranch ?? null;
   if (opts.resolveCommit === false) {
     return { ...base, commit: null, commitSource: null, ref, note: "Commit lookup was turned off (resolve_commit: false)." };
   }
-  if (!ref) {
-    return { ...base, commit: null, commitSource: null, ref: null, note: "GitHub did not report a default branch, so no commit was looked up." };
-  }
 
-  const r = await githubCommit(deps, id, ref, opts.signal);
-  if (!r.sha) {
-    warnings.push(`GitHub commit lookup for ${id}@${ref} failed: ${r.error}`);
-    return { ...base, commit: null, commitSource: null, ref, note: `Commit lookup failed (${r.error}). Run: git ls-remote https://github.com/${id} ${ref}` };
+  // No ref in the link: the intake brief already holds the head of the default branch (read over git).
+  let sha = !first.ref && check?.head && FULL_SHA.test(check.head) ? check.head.toLowerCase() : null;
+  if (!sha) {
+    const r = await gitResolve(deps, gitUrl, first.ref, opts.signal);
+    if (!r.sha) {
+      warnings.push(`Commit lookup for ${repo ?? first.url}${ref ? `@${ref}` : ""} failed: ${r.error}`);
+      return { ...base, commit: null, commitSource: null, ref, note: `Commit lookup failed (${r.error}). Run: git ls-remote ${gitUrl}${ref ? ` ${ref}` : ""}` };
+    }
+    sha = r.sha;
   }
   if (first.ref) {
-    return { ...base, commit: r.sha, commitSource: "ref_resolved", ref, note: `Commit behind "${ref}", the ref the paper links to.` };
+    return { ...base, commit: sha, commitSource: "ref_resolved", ref, note: `Commit behind "${ref}", the ref the paper links to.` };
   }
+  const branch = ref ?? "the default branch";
   const when = brief.paper.published ? ` The paper was published ${brief.paper.published}; check the tags and releases from then.` : "";
   return {
     ...base,
-    commit: r.sha,
+    commit: sha,
     commitSource: "default_branch_head",
     ref,
-    note: `${r.sha} is the head of ${ref} today, not necessarily the commit the paper used.${when}`,
+    note: `${sha} is the head of ${branch} today, not necessarily the commit the paper used.${when}`,
   };
 }
 
-/** The full commit SHA behind a branch or tag, from the GitHub REST API (one request). */
-export async function githubCommit(deps: Deps, fullName: string, ref: string, signal?: AbortSignal): Promise<{ sha: string | null; error: string | null }> {
+/**
+ * Resolve a branch or tag to a full commit SHA with the git protocol (what `git ls-remote` does), on any git host.
+ * `ref` null means HEAD. No API and no token.
+ */
+export async function gitResolve(deps: Deps, repoUrl: string, ref: string | null, signal?: AbortSignal): Promise<{ sha: string | null; error: string | null }> {
   const f = deps.fetch ?? globalThis.fetch;
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github.sha",
-    "User-Agent": USER_AGENT,
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
-  if (deps.githubToken) headers.Authorization = `Bearer ${deps.githubToken}`;
   const signals = [AbortSignal.timeout(COMMIT_TIMEOUT_MS), ...(signal ? [signal] : [])];
   try {
-    const res = await f(`https://api.github.com/repos/${fullName}/commits/${encodeURIComponent(ref)}`, { headers, signal: AbortSignal.any(signals) });
-    const text = (await res.text()).trim();
-    if (!res.ok) {
-      const limited = res.status === 403 || res.status === 429;
-      return { sha: null, error: `HTTP ${res.status}${limited ? " (rate limit; set GITHUB_TOKEN)" : ""}` };
-    }
-    if (!FULL_SHA.test(text)) return { sha: null, error: "GitHub did not answer with a commit SHA" };
-    return { sha: text.toLowerCase(), error: null };
+    const res = await f(`${repoUrl}.git/info/refs?service=git-upload-pack`, { headers: { "User-Agent": USER_AGENT, Accept: "*/*" }, signal: AbortSignal.any(signals) });
+    const text = await res.text();
+    if (!res.ok) return { sha: null, error: `HTTP ${res.status}` };
+    if (!text.includes("# service=git-upload-pack")) return { sha: null, error: "the host did not answer as a git repository" };
+    const refs = new Map<string, string>();
+    for (const m of text.matchAll(/([0-9a-f]{40}) ([^\s\0]+)/g)) if (!refs.has(m[2]!)) refs.set(m[2]!, m[1]!);
+    const sha = ref
+      ? (refs.get(`refs/tags/${ref}^{}`) ?? refs.get(`refs/tags/${ref}`) ?? refs.get(`refs/heads/${ref}`) ?? refs.get(ref) ?? null)
+      : (refs.get("HEAD") ?? null);
+    return sha ? { sha, error: null } : { sha: null, error: ref ? `no branch or tag named "${ref}"` : "no HEAD advertised" };
   } catch (e) {
     const err = e as Error;
     return { sha: null, error: err.name === "TimeoutError" ? `timed out after ${COMMIT_TIMEOUT_MS / 1000}s` : `network error: ${err.message}` };

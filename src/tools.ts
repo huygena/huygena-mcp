@@ -26,7 +26,7 @@ export type Output = { summary: string; data: Record<string, unknown> };
 const MAX_LISTED = 25;
 
 function intakeOpts(deps: Deps, signal?: AbortSignal) {
-  return { fetch: deps.fetch, githubToken: deps.githubToken, mailto: deps.mailto, signal };
+  return { fetch: deps.fetch, mailto: deps.mailto, signal };
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -39,8 +39,8 @@ function listed<T>(items: T[], line: (x: T) => string): string[] {
 
 // ---------- paper_intake ----------
 
-export async function paperIntake(deps: Deps, a: { input: string; full_text?: boolean; check_github?: boolean }, signal?: AbortSignal): Promise<Output> {
-  const brief = await intake(a.input, { ...intakeOpts(deps, signal), fullText: a.full_text ?? true, checkGithub: a.check_github ?? true });
+export async function paperIntake(deps: Deps, a: { input: string; full_text?: boolean; check_repos?: boolean; check_github?: boolean }, signal?: AbortSignal): Promise<Output> {
+  const brief = await intake(a.input, { ...intakeOpts(deps, signal), fullText: a.full_text ?? true, checkRepos: a.check_repos ?? a.check_github ?? true });
   return { summary: formatBrief(brief, { color: false, width: 100 }), data: brief as unknown as Record<string, unknown> };
 }
 

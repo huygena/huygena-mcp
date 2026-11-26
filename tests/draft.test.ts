@@ -1,7 +1,7 @@
 import { lintManifest, parseManifest } from "huygena-verify";
 import { describe, expect, it } from "vitest";
 
-import { AF2, AF2_SHA, connect, data, fakeFetch, testDeps, text, type Route } from "./helpers.js";
+import { AF2, AF2_SHA, connect, data, fakeFetch, gitRefs, testDeps, text, type Route } from "./helpers.js";
 
 async function draft(routes: Route[], args: Record<string, unknown> = {}) {
   const f = fakeFetch(routes);
@@ -28,10 +28,9 @@ describe("draft_manifest", () => {
     expect(d.code).toMatchObject({ repo: "github.com/google-deepmind/alphafold", commit: AF2_SHA, commitSource: "default_branch_head", ref: "main" });
     expect(d.code.note).toMatch(/head of main today, not necessarily the commit the paper used/);
     expect(d.manifestYaml).toContain(`code: "github.com/google-deepmind/alphafold@${AF2_SHA}"`);
-    // One request to GitHub for the commit, with the sha media type.
-    const commitCall = calls.find((c) => c.url.includes("/commits/"))!;
-    expect(commitCall.url).toBe("https://api.github.com/repos/google-deepmind/alphafold/commits/main");
-    expect(commitCall.headers.Accept).toBe("application/vnd.github.sha");
+    // The head commit comes from the git ref advertisement intake already read: no API call for the commit, no token.
+    expect(calls.some((c) => c.url.includes("/commits/"))).toBe(false);
+    expect(calls.filter((c) => c.url.includes(".git/info/refs"))).toHaveLength(1);
 
     const parsed = parseManifest(d.manifestYaml);
     expect(parsed.ok).toBe(true);
@@ -64,20 +63,21 @@ describe("draft_manifest", () => {
     expect(d.code).toMatchObject({ repo: "github.com/google-deepmind/alphafold", commit: null });
     expect(d.manifestYaml).toContain('code: "github.com/google-deepmind/alphafold@<40-character commit sha>"');
     expect(d.lint.findings.some((f: { path: string; code: string }) => f.path === "env.code" && f.code === "placeholder")).toBe(true);
-    expect(calls.some((c) => c.url.includes("/commits/"))).toBe(false);
+    expect(calls.filter((c) => c.url.includes(".git/info/refs"))).toHaveLength(1);
   });
 
-  it("explains a GitHub rate limit instead of guessing a commit", async () => {
-    const routes = AF2.map((r) => (/commits/.test(r.match.source) ? { match: r.match, status: 403, body: '{"message":"API rate limit exceeded"}' } : r));
+  it("explains a failed lookup instead of guessing a commit, without mentioning tokens", async () => {
+    const routes = AF2.map((r) => (/info\\\/refs/.test(r.match.source) ? { match: r.match, status: 503, body: "busy" } : r));
     const { d, r } = await draft(routes);
     expect(d.code.commit).toBeNull();
-    expect(d.code.note).toMatch(/HTTP 403 \(rate limit; set GITHUB_TOKEN\).*git ls-remote https:\/\/github\.com\/google-deepmind\/alphafold main/);
-    expect(d.warnings[0]).toMatch(/commit lookup .* failed/);
+    expect(d.code.note).toMatch(/Commit lookup failed \(HTTP 503\)\. Run: git ls-remote https:\/\/github\.com\/deepmind\/alphafold/);
+    expect(d.warnings[0]).toMatch(/Commit lookup .* failed/);
+    expect(JSON.stringify(d)).not.toMatch(/GITHUB_TOKEN|rate limit/);
     expect(text(r)).toMatch(/commit not pinned/);
   });
 
-  it("rejects an answer that is not a commit SHA", async () => {
-    const routes = AF2.map((r) => (/commits/.test(r.match.source) ? { match: r.match, body: "<html>" } : r));
+  it("rejects an answer that is not a git ref advertisement", async () => {
+    const routes = AF2.map((r) => (/info\\\/refs/.test(r.match.source) ? { match: r.match, body: "<html>" } : r));
     const { d } = await draft(routes);
     expect(d.code.commit).toBeNull();
   });
@@ -98,11 +98,21 @@ describe("draft_manifest", () => {
     const sha = "fedcba9876543210fedcba9876543210fedcba98";
     const routes: Route[] = [
       { match: /export\.arxiv\.org/, body: arxivWithCode("https://github.com/example-lab/model/tree/v1.0") },
-      { match: /api\.github\.com\/repos\/example-lab\/model\/commits\/v1\.0$/, body: sha },
+      { match: /github\.com\/example-lab\/model\.git\/info\/refs/, body: gitRefs("1111111111111111111111111111111111111111", "main", [["2222222222222222222222222222222222222222", "refs/tags/v1.0"], [sha, "refs/tags/v1.0^{}"]]) },
       { match: /api\.github\.com\/repos\/example-lab\/model$/, body: repo("example-lab/model") },
     ];
     const { d } = await draft(routes, { input: "arXiv:2401.00001" });
     expect(d.code).toMatchObject({ commit: sha, commitSource: "ref_resolved", ref: "v1.0" });
+  });
+
+  it("works the same for GitLab", async () => {
+    const sha = "3333333333333333333333333333333333333333";
+    const routes: Route[] = [
+      { match: /export\.arxiv\.org/, body: arxivWithCode("https://gitlab.com/example-lab/model") },
+      { match: /gitlab\.com\/example-lab\/model\.git\/info\/refs/, body: gitRefs(sha, "master") },
+    ];
+    const { d } = await draft(routes, { input: "arXiv:2401.00001" });
+    expect(d.code).toMatchObject({ repo: "gitlab.com/example-lab/model", commit: sha, commitSource: "default_branch_head", ref: "master" });
   });
 
   it("says so when the paper links no code", async () => {

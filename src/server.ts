@@ -112,7 +112,8 @@ export function createServer(deps: Deps): McpServer {
           .max(500)
           .describe("DOI (10.1038/s41586-021-03819-2, doi.org URL, publisher URL), arXiv id or URL (2106.09685, arXiv:1706.03762v5), bioRxiv/medRxiv DOI or URL, PMID (PMID:34265844) or PMCID (PMC8371605)."),
         full_text: z.boolean().optional().describe("Read open full text from NCBI PMC / Europe PMC for availability statements and links. Default true. Set false for a faster, shallower brief."),
-        check_github: z.boolean().optional().describe("Check the paper's own GitHub repositories over the API. Default true."),
+        check_repos: z.boolean().optional().describe("Check the paper's own code links on any host (git protocol, no token). Default true."),
+        check_github: z.boolean().optional().describe("Deprecated alias of check_repos."),
       },
       annotations: { title: "Paper to replication brief", ...READ_WEB },
     },

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.0 · 2026-11-26
+
+No token, no GitHub API dependency.
+
+- `huygena-intake` v0.8.0: code links on any host (GitHub, GitLab, Codeberg, Bitbucket, archives) are checked over the git protocol or by URL. Briefs now carry `code[].repo` instead of `code[].github`.
+- `draft_manifest` resolves commits over the git protocol (the request `git ls-remote` makes), on any git host. The default branch head comes from the brief, so most drafts make no extra request.
+- `GITHUB_TOKEN` is no longer read or sent anywhere.
+- `paper_intake` takes `check_repos`; `check_github` still works.
+
 ## v0.4.0 · 2026-11-26
 
 Same tools, resources and error codes as 0.1.0.

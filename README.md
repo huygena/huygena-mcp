@@ -13,9 +13,9 @@ Paper lookups use public APIs with no keys. All other tools run locally. The ser
 
 | Tool | Input | What it returns | Network |
 |---|---|---|---|
-| `paper_intake` | `input`, `full_text?`, `check_github?` | Replication brief: metadata, access and license, primary vs mentioned code links with GitHub status, data links and accessions, availability statements, readiness `ready` / `partial` / `not_ready` with a reason per check | Crossref, arXiv, bioRxiv, NCBI, Europe PMC, GitHub |
+| `paper_intake` | `input`, `full_text?`, `check_repos?` | Replication brief: metadata, access and license, primary vs mentioned code links with reachability on any host, data links and accessions, availability statements, readiness `ready` / `partial` / `not_ready` with a reason per check | Crossref, arXiv, bioRxiv, NCBI, Europe PMC, code hosts |
 | `literature_search` | `query`, `limit?`, `sort?`, `timeout_seconds?` | Europe PMC hits with DOI, PMID/PMCID, year, journal, open-access flag, citation count | Europe PMC |
-| `draft_manifest` | `input`, `resolve_commit?` | A `manifest.v0` YAML skeleton for the paper, its lint report, a to-do list and the abstract | as `paper_intake`, plus one GitHub request |
+| `draft_manifest` | `input`, `resolve_commit?` | A `manifest.v0` YAML skeleton for the paper, its lint report, a to-do list and the abstract | as `paper_intake`, plus one git request when the paper links a tag or branch |
 | `validate_manifest` | `manifest` | Schema and lint findings (severity, rule id, path) and the manifest hash a certificate anchors | none |
 | `compare_claims` | `manifest`, `results` (1 or 2 nodes), `partial_factor?` | Per-claim verdict, delta and reason; mismatches between nodes; results that ran a different manifest | none |
 | `hash_bundle` | `path`, `ignore?` | Evidence bundle: SHA-256 and size per file, and a root hash you can recompute with `sha256sum` | none |
@@ -102,7 +102,6 @@ claude mcp add huygena -- node "$PWD/dist/index.js"
 | Variable | Default | |
 |---|---|---|
 | `HUYGENA_MCP_ROOT` | the working directory | The only folder the file tools may read. If unset and the working directory is `/`, file tools are off |
-| `GITHUB_TOKEN` | none | Raises GitHub's limit from 60 to 5,000 requests an hour. Sent only to api.github.com |
 | `HUYGENA_MAILTO` | none | Contact email for Crossref's polite pool and NCBI. Sent only to those two |
 
 Logs go to stderr. Stdout carries the MCP protocol.
@@ -123,7 +122,7 @@ Readiness  READY  All 5 core checks pass
   pass  code_found              The paper links its own code: github.com/deepmind/alphafold
   pass  code_reachable          github.com/google-deepmind/alphafold is live on GitHub (default
                                 branch main, last push 2026-04-22)
-  pass  code_license            Apache-2.0 (detected by GitHub in google-deepmind/alphafold)
+  pass  code_license            Apache-2.0 (license file in github.com/google-deepmind/alphafold)
   pass  data_found              16 links to datasets or database records
   pass  open_access             Free to read (CC-BY-4.0); source: Crossref license
   warn  code_snapshot           Code lives only in a git repository that can change after
@@ -166,7 +165,7 @@ env:
 
 The draft pins what it can verify and leaves the rest as placeholders that lint flags:
 
-- `paper` comes from the paper record. `code` is pinned to a commit GitHub reported, and the comment says which commit that is.
+- `paper` comes from the paper record. `code` is pinned to a commit read over the git protocol (what `git ls-remote` does, on any git host, no token), and the comment says which commit that is.
 - Claims, the container digest, data hashes and seeds are placeholders. They have to come from a person reading the paper.
 
 **`compare_claims { "manifest": "examples/manifest.yaml", "results": ["examples/results.node-a.json", "examples/results.node-b.json"] }`**
