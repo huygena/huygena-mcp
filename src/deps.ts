@@ -4,7 +4,7 @@ import { parse, resolve } from "node:path";
 import type { FetchLike } from "huygena-intake";
 
 export const SERVER_NAME = "huygena-mcp";
-export const SERVER_VERSION = "0.5.0";
+export const SERVER_VERSION = "0.6.0";
 export const USER_AGENT = `${SERVER_NAME}/${SERVER_VERSION} (+https://github.com/huygena/huygena-mcp)`;
 
 /** Everything a tool needs. Built from the environment in index.ts, injected in tests. */
@@ -18,6 +18,8 @@ export type Deps = {
   fetch?: FetchLike;
   /** Contact email for Crossref's polite pool and NCBI. Sent only to those two. */
   mailto?: string;
+  /** JSON-RPC endpoint for Robinhood Chain reads (HUYGENA_RPC_URL). Empty: a public RPC. */
+  rpcUrl?: string;
   log: (message: string) => void;
 };
 
@@ -36,6 +38,7 @@ export function depsFromEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.
     // Some clients start servers in /. Reading the whole disk by default is not acceptable; it has to be asked for.
     root: !explicit && parse(root).root === root ? null : root,
     mailto: env.HUYGENA_MAILTO?.trim() || "",
+    rpcUrl: env.HUYGENA_RPC_URL?.trim() || "",
     log: (message) => process.stderr.write(`[huygena-mcp] ${message}\n`),
   };
 }

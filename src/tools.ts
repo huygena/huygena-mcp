@@ -10,6 +10,13 @@ import {
   NodeResultsSchema,
   verifyBundle,
   verifyCertificate,
+  listBounties,
+  readBounty,
+  readCertificate,
+  runKey,
+  ROBINHOOD_CHAIN,
+  OnchainError,
+  type OnchainOptions,
   type Bundle,
   type CompareReport,
   type Finding,
@@ -209,9 +216,22 @@ export async function compareClaims(deps: Deps, a: { manifest: string; results: 
 
 // ---------- verify_certificate ----------
 
+function chain(deps: Deps): OnchainOptions {
+  return { rpcUrl: deps.rpcUrl || undefined, fetch: deps.fetch as typeof fetch | undefined };
+}
+
+async function onchain<T>(f: () => Promise<T>): Promise<T> {
+  try {
+    return await f();
+  } catch (e) {
+    if (e instanceof OnchainError) throw new ToolError("rpc_error", `could not read Robinhood Chain: ${e.message}`);
+    throw e;
+  }
+}
+
 export async function certificateVerify(
   deps: Deps,
-  a: { certificate: string; manifest?: string; bundle_path?: string; ignore?: string[] },
+  a: { certificate: string; manifest?: string; bundle_path?: string; ignore?: string[]; onchain?: boolean },
 ): Promise<Output> {
   const { text } = await docText(deps.root, a.certificate);
   let cert: unknown;
@@ -222,7 +242,7 @@ export async function certificateVerify(
   }
   const manifest = a.manifest !== undefined ? (await docText(deps.root, a.manifest)).text : undefined;
   const bundleDir = a.bundle_path !== undefined ? (await dirInRoot(deps.root, a.bundle_path)).abs : undefined;
-  const report = await verifyCertificate(cert, { manifest, bundleDir, ignore: a.ignore });
+  const report = await verifyCertificate(cert, { manifest, bundleDir, ignore: a.ignore, onchain: a.onchain ? chain(deps) : false });
   const n = report.counts;
   const lines = [
     `${report.ok ? "OK    no check failed" : "FAIL  at least one check failed"} · ${n.pass} pass · ${n.fail} fail · ${n.skipped} skipped · ${n.planned} planned`,
@@ -230,9 +250,53 @@ export async function certificateVerify(
     "",
     ...report.checks.map((c) => `  ${c.status.padEnd(8)} ${c.id.padEnd(22)} ${c.detail}`),
     "",
-    "planned = not implemented yet (TEE attestation signatures, on-chain lookup). Planned and skipped checks are not passes.",
+    `planned = not implemented yet (TEE attestation signatures). ${a.onchain ? "" : "Set onchain: true to compare with the record on Robinhood Chain. "}Planned and skipped checks are not passes.`,
   ].filter((l, i) => l !== "" || i > 1);
   return { summary: lines.join("\n"), data: report as unknown as Record<string, unknown> };
+}
+
+// ---------- read_bounties ----------
+
+export async function bountiesRead(deps: Deps, a: { id?: number; paper?: string; limit?: number }): Promise<Output> {
+  const where = `HuygenaEscrow ${ROBINHOOD_CHAIN.escrow} on ${ROBINHOOD_CHAIN.name} (chain id ${ROBINHOOD_CHAIN.id})`;
+  if (a.id !== undefined) {
+    const b = await onchain(() => readBounty(a.id!, chain(deps)));
+    if (!b) return { summary: `Bounty #${a.id} does not exist in ${where}.`, data: { escrow: ROBINHOOD_CHAIN.escrow, found: false, bounty: null } };
+    const lines = [
+      `Bounty #${b.id} · ${b.status} · ${b.total} USDG escrowed`,
+      `paper key ${b.paperId}`,
+      `deadline ${b.deadline} · fee ${b.feeBps / 100}% (fixed at creation) · confirmer ${b.confirmerShareBps / 100}% of the payout`,
+      `creator ${b.creator} · certificate ${b.runId ?? "none yet"}`,
+      `details ${b.uri}`,
+      `Read from ${where}.`,
+    ];
+    return { summary: lines.join("\n"), data: { escrow: ROBINHOOD_CHAIN.escrow, found: true, bounty: b } };
+  }
+  const list = await onchain(() => listBounties({ ...chain(deps), paper: a.paper, limit: a.limit }));
+  const head = `${list.count} ${list.count === 1 ? "bounty" : "bounties"} created in ${where}${a.paper ? `; ${list.bounties.length} for ${a.paper}` : ""}.`;
+  const lines = list.bounties.length
+    ? [head, "", ...listed(list.bounties, (b) => `  #${b.id}  ${b.status.padEnd(8)} ${b.total.padStart(10)} USDG  deadline ${b.deadline.slice(0, 10)}  paper ${b.paperId}`)]
+    : [head, a.paper ? "No bounty for this paper yet." : "No bounties yet."];
+  return { summary: lines.join("\n"), data: { escrow: ROBINHOOD_CHAIN.escrow, ...list } };
+}
+
+// ---------- read_certificate ----------
+
+export async function certificateRead(deps: Deps, a: { run_id: string }): Promise<Output> {
+  const key = runKey(a.run_id);
+  const c = await onchain(() => readCertificate(a.run_id, chain(deps)));
+  const where = `HuygenaCertificates ${ROBINHOOD_CHAIN.certificates} on ${ROBINHOOD_CHAIN.name}`;
+  if (!c) return { summary: `No certificate with run id ${key} in ${where}.`, data: { registry: ROBINHOOD_CHAIN.certificates, runId: key, found: false, certificate: null } };
+  const lines = [
+    `Certificate ${c.runId} · published ${c.publishedAt}`,
+    `paper key ${c.paperId} · bounty ${c.bountyId === "0" ? "none" : `#${c.bountyId}`}`,
+    `manifest ${c.manifestHash} · bundle ${c.bundleHash}`,
+    `runner ${c.runner} · confirmer ${c.confirmer}`,
+    `verdicts: ${c.verdicts.map((v, i) => `${i + 1}. ${v}`).join(", ")}`,
+    `evidence ${c.uri}`,
+    `Read from ${where}. To check the files against it, call verify_certificate with onchain: true.`,
+  ];
+  return { summary: lines.join("\n"), data: { registry: ROBINHOOD_CHAIN.certificates, runId: key, found: true, certificate: c } };
 }
 
 // ---------- draft_manifest ----------

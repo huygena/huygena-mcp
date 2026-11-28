@@ -12,10 +12,21 @@ import { AF2, connect, data, EXAMPLES, example, fakeFetch, testDeps, text, timeo
 const MANIFEST_HASH = "sha256:3183bd7cd87ba9fcafeed9723ab55255e3d07bcf4b76be55c1759c72d911fbce";
 const BUNDLE_ROOT = "sha256:f4f9b720e599b451270cf55acf8ce794854e86878e7841d674d047a8a2d8dc4d";
 
-const TOOLS = ["compare_claims", "draft_manifest", "hash_bundle", "literature_search", "paper_intake", "validate_manifest", "verify_bundle", "verify_certificate"];
+const TOOLS = [
+  "compare_claims",
+  "draft_manifest",
+  "hash_bundle",
+  "literature_search",
+  "paper_intake",
+  "read_bounties",
+  "read_certificate",
+  "validate_manifest",
+  "verify_bundle",
+  "verify_certificate",
+];
 
 describe("server surface", () => {
-  it("lists the eight tools, each with a description and described parameters", async () => {
+  it("lists the ten tools, each with a description and described parameters", async () => {
     const { client } = await connect(testDeps());
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(TOOLS);
@@ -30,8 +41,8 @@ describe("server surface", () => {
   it("does not offer a tool that would pretend to start a run or post a bounty", async () => {
     const { client } = await connect(testDeps());
     const names = (await client.listTools()).tools.map((t) => t.name).join(" ");
-    expect(names).not.toMatch(/replicat|bounty|run_|pay/);
-    expect(client.getInstructions()).toMatch(/Not live yet/);
+    expect(names).not.toMatch(/replicat|post|create|fund|start|run_|pay|sign/);
+    expect(client.getInstructions()).toMatch(/No tool here posts a bounty, starts a run, signs anything or spends money/);
   });
 
   it("serves the four JSON schemas and the verdict rules as resources", async () => {
@@ -226,7 +237,7 @@ describe("verify_certificate", () => {
     const rep = data(r);
     expect(rep.ok).toBe(true);
     const status = Object.fromEntries(rep.checks.map((c: { id: string; status: string }) => [c.id, c.status]));
-    expect(status).toMatchObject({ "manifest-hash": "pass", verdicts: "pass", "bundle-root": "pass", "attestation-signature": "planned", "onchain-record": "planned" });
+    expect(status).toMatchObject({ "manifest-hash": "pass", verdicts: "pass", "bundle-root": "pass", "attestation-signature": "planned", "onchain-record": "skipped" });
     expect(text(r)).toMatch(/planned = not implemented yet/);
   });
 
@@ -360,5 +371,56 @@ describe("file access stays inside the root", () => {
     expect(looksLikePath("r.JSON")).toBe(true);
     expect(looksLikePath('{"node":"a","claims":{}}')).toBe(false);
     expect(looksLikePath("spec: manifest.v0\npaper: x.json")).toBe(false);
+  });
+});
+
+describe("on-chain reads", () => {
+  const ZERO = `0x${"0".repeat(128)}`;
+  /** A JSON-RPC endpoint that answers eth_call by selector. */
+  function rpcFetch(answers: Record<string, string>) {
+    const calls: string[] = [];
+    const f = (async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      const sel = String(body.params[0].data).slice(0, 10);
+      calls.push(sel);
+      return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: answers[sel] ?? ZERO }), { status: 200 });
+    }) as unknown as typeof fetch;
+    return { f, calls };
+  }
+
+  it("read_bounties says when there are none, and never claims activity", async () => {
+    const { f, calls } = rpcFetch({ "0xfd14fad4": `0x${"0".repeat(63)}1` });
+    const { call } = await connect({ ...testDeps(), fetch: f as never, rpcUrl: "http://rpc.test" });
+    const r = await call("read_bounties", {});
+    expect(r.isError).toBeFalsy();
+    expect(text(r)).toMatch(/0 bounties created in HuygenaEscrow 0xBfac5B4610489fAd1363D1813A9c610fa1559835/);
+    expect(text(r)).toMatch(/No bounties yet/);
+    expect(data(r).count).toBe(0);
+    expect(calls).toEqual(["0xfd14fad4"]);
+  });
+
+  it("read_bounties reports a missing id", async () => {
+    // What getBounty returns for an id that was never created: an all-zero struct.
+    const { f } = rpcFetch({ "0xee8c4bbf": "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000" });
+    const { call } = await connect({ ...testDeps(), fetch: f as never, rpcUrl: "http://rpc.test" });
+    const r = await call("read_bounties", { id: 9 });
+    expect(text(r)).toMatch(/Bounty #9 does not exist/);
+    expect(data(r).found).toBe(false);
+  });
+
+  it("read_certificate hashes a text run id and reports not found", async () => {
+    const { f, calls } = rpcFetch({ "0xf333fe08": `0x${"0".repeat(62)}40${"0".repeat(64)}` });
+    const { call } = await connect({ ...testDeps(), fetch: f as never, rpcUrl: "http://rpc.test" });
+    const r = await call("read_certificate", { run_id: "run_example_0001" });
+    expect(text(r)).toMatch(/No certificate with run id 0xd7dd4f084e900e899a3933dddec7d552b0c3fe8126f832c682cdec3882bd826f/);
+    expect(calls).toEqual(["0xf333fe08"]);
+  });
+
+  it("an unreachable RPC is a tool error the model can read", async () => {
+    const f = (async () => new Response("down", { status: 502 })) as unknown as typeof fetch;
+    const { call } = await connect({ ...testDeps(), fetch: f as never, rpcUrl: "http://rpc.test" });
+    const r = await call("read_bounties", {});
+    expect(r.isError).toBe(true);
+    expect(text(r)).toMatch(/^rpc_error: could not read Robinhood Chain: RPC answered HTTP 502/);
   });
 });

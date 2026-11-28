@@ -5,9 +5,9 @@
 huygena-mcp puts the two open-source Huygena libraries behind the [Model Context Protocol](https://modelcontextprotocol.io):
 
 - [huygena-intake](https://github.com/huygena/huygena-intake) turns a DOI, arXiv, bioRxiv or PubMed ID into a replication brief. It covers the paper's own code (checked on GitHub), its data, its license and a readiness verdict with reasons.
-- [huygena-verify](https://github.com/huygena/huygena-verify) lints run manifests, hashes evidence folders, computes per-claim verdicts and re-checks certificates. All of it runs offline.
+- [huygena-verify](https://github.com/huygena/huygena-verify) lints run manifests, hashes evidence folders, computes per-claim verdicts and re-checks certificates offline, and reads Huygena's live contracts on Robinhood Chain.
 
-Paper lookups use public APIs with no keys. All other tools run locally. The server never writes files, and it never starts a run or spends money.
+Paper lookups use public APIs with no keys. On-chain reads use plain JSON-RPC with no key and no wallet. All other tools run locally. The server never writes files, signs anything, posts a bounty, starts a run or spends money.
 
 ## Tools
 
@@ -20,7 +20,9 @@ Paper lookups use public APIs with no keys. All other tools run locally. The ser
 | `compare_claims` | `manifest`, `results` (1 or 2 nodes), `partial_factor?` | Per-claim verdict, delta and reason; mismatches between nodes; results that ran a different manifest | none |
 | `hash_bundle` | `path`, `ignore?` | Evidence bundle: SHA-256 and size per file, and a root hash you can recompute with `sha256sum` | none |
 | `verify_bundle` | `path`, `expected`, `ignore?` | Match or not, with every modified, added and missing file | none |
-| `verify_certificate` | `certificate`, `manifest?`, `bundle_path?`, `ignore?` | Each check as `pass`, `fail`, `skipped` or `planned` | none |
+| `verify_certificate` | `certificate`, `manifest?`, `bundle_path?`, `ignore?`, `onchain?` | Each check as `pass`, `fail`, `skipped` or `planned`. With `onchain: true`, the certificate is compared with its record in HuygenaCertificates | none, or Robinhood Chain RPC with `onchain` |
+| `read_bounties` | `id?`, `paper?`, `limit?` | USDG bounties in HuygenaEscrow: status, USDG escrowed, deadline, fee and confirmer share fixed at creation, settling certificate. One by id, per paper, or the newest | Robinhood Chain RPC |
+| `read_certificate` | `run_id` | One certificate from HuygenaCertificates: paper key, bounty, manifest hash, bundle root, attestation hashes, both nodes, one verdict per claim, evidence link, publication time | Robinhood Chain RPC |
 
 Notes on the inputs:
 
@@ -103,6 +105,7 @@ claude mcp add huygena -- node "$PWD/dist/index.js"
 |---|---|---|
 | `HUYGENA_MCP_ROOT` | the working directory | The only folder the file tools may read. If unset and the working directory is `/`, file tools are off |
 | `HUYGENA_MAILTO` | none | Contact email for Crossref's polite pool and NCBI. Sent only to those two |
+| `HUYGENA_RPC_URL` | a public Robinhood Chain RPC | JSON-RPC endpoint for `read_bounties`, `read_certificate` and `verify_certificate` with `onchain` |
 
 Logs go to stderr. Stdout carries the MCP protocol.
 
@@ -193,13 +196,20 @@ Failed means not reproduced with the published code and data. It never means fra
 
 The example paper, values and nodes are made up for huygena-verify's examples. The DOI uses `10.5555`, the prefix Crossref reserves for examples.
 
+**`read_bounties`** with no arguments, read live from the escrow:
+
+```text
+0 bounties created in HuygenaEscrow 0xBfac5B4610489fAd1363D1813A9c610fa1559835 on Robinhood Chain (chain id 4663).
+No bounties yet.
+```
+
 **`verify_certificate`** on the example certificate, with the manifest and evidence folder:
 
 ```text
-OK    no check failed · 8 pass · 0 fail · 0 skipped · 2 planned
+OK    no check failed · 8 pass · 0 fail · 1 skipped · 1 planned
   […]
   planned  attestation-signature  not implemented in this version: checking the report against NVIDIA remote attestation and Intel TDX quote verification
-  planned  onchain-record         not implemented: Huygena contracts are not deployed yet, so there is no record to read
+  skipped  onchain-record         not requested; pass onchain (CLI: --onchain) to read the record from Robinhood Chain
 ```
 
 ## Filesystem access
@@ -219,16 +229,17 @@ Failures come back as MCP tool errors, as `code: message` text the model can act
 - From intake: `invalid_id`, `not_found`, `upstream`, `timeout`.
 - From the file tools: `outside_root`, `no_root`, `not_a_directory`.
 - From documents and verdicts: `invalid_manifest`, `invalid_results`, `invalid_expected`, `compare_failed`.
+- From on-chain reads: `rpc_error`.
 
 A slow Europe PMC does not fail `paper_intake`: the brief comes back with a note in `warnings`.
 
-## Planned
+## In progress
 
-These are not live, and no tool here pretends they are:
+These are in progress, and no tool here pretends they are live:
 
-- **Replication and research runs over MCP** (whitepaper utility 41). An agent would request a replication or fund a bounty on a paper, a GPU TEE node would re-run it, a second node would confirm, and the certificate would go on-chain. Huygena contracts are not deployed yet. See https://docs.huygena.xyz/open-items.
-- **Agent payments over x402** (utility 42). Agents would pay for runs per call in USDG, without an account. Chain and launch details are still open items.
-- **Attestation and on-chain checks in `verify_certificate`.** These are reported as `planned` until the contracts and attestation verification exist.
+- **Replication and research runs over MCP** (whitepaper utility 41). An agent requests a replication on a paper, a GPU TEE node re-runs it, a second node confirms, and the certificate goes on-chain. The contracts are live; GPU TEE runs and confirmation nodes are in progress. Bounties are posted from the app (https://dapp.huygena.xyz/new) with the funder's own wallet, not from this server.
+- **Agent payments over x402** (utility 42). Agents pay for runs per call in USDG, without an account.
+- **Attestation signature checks in `verify_certificate`.** Reported as `planned` until attestation verification exists.
 
 ## How it fits Huygena
 

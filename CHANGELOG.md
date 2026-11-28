@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.0 · 2026-11-28
+
+Reads Huygena's live contracts on Robinhood Chain. Still read-only: no tool signs, posts, funds or spends.
+
+- New tool `read_bounties`: USDG bounties in HuygenaEscrow. One by id, every bounty for a paper (`doi:…`, `arxiv:…`, `biorxiv:…`), or the newest. Status, USDG escrowed, deadline, the fee and confirmer share fixed at creation, and the certificate that settled it.
+- New tool `read_certificate`: one certificate from HuygenaCertificates by run id, with paper key, bounty, hashes, both nodes and one verdict per claim.
+- `verify_certificate` takes `onchain`: the `onchain-record` check compares the certificate with its contract record. Without it the check is `skipped` (it was `planned`).
+- `HUYGENA_RPC_URL` sets the JSON-RPC endpoint. Default: a public Robinhood Chain RPC.
+- `huygena-verify` v0.3.0.
+
 ## v0.5.0 · 2026-11-26
 
 No token, no GitHub API dependency.

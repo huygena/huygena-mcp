@@ -10,15 +10,16 @@ import { z } from "zod";
 
 import { SERVER_NAME, SERVER_VERSION, type Deps } from "./deps.js";
 import { ToolError } from "./files.js";
-import { bundleHash, bundleVerify, certificateVerify, compareClaims, draft, literatureSearch, paperIntake, validateManifest, type Output } from "./tools.js";
+import { bountiesRead, bundleHash, bundleVerify, certificateRead, certificateVerify, compareClaims, draft, literatureSearch, paperIntake, validateManifest, type Output } from "./tools.js";
 
 export { SERVER_NAME, SERVER_VERSION };
 
 const INSTRUCTIONS = `Huygena tools for replicating computational papers.
 Typical flow: paper_intake (is this paper re-runnable?) -> draft_manifest (manifest skeleton) -> the user fills in claims, container digest and data hashes -> validate_manifest until it passes.
-After a re-run: compare_claims (verdicts from one or two nodes' results), hash_bundle / verify_bundle (evidence folder), verify_certificate (re-check a certificate).
+After a re-run: compare_claims (verdicts from one or two nodes' results), hash_bundle / verify_bundle (evidence folder), verify_certificate (re-check a certificate, with onchain: true also against its on-chain record).
+On-chain, read-only: read_bounties (USDG bounties in HuygenaEscrow, all, per paper or one by id) and read_certificate (a record in HuygenaCertificates by run id). Both contracts are live on Robinhood Chain (chain id 4663).
 Verdicts: Replicated, Partially replicated, Failed, Could not run. Failed means not reproduced with the published code and data, never fraud.
-Not live yet: Huygena contracts, bounties, GPU TEE runs and on-chain certificates. No tool here starts a run or spends money.
+In progress: GPU TEE runs and confirmation nodes. No tool here posts a bounty, starts a run, signs anything or spends money.
 File tools only read inside the server's root folder (HUYGENA_MCP_ROOT); paths are relative to it.`;
 
 /** Text for people and older clients, JSON for code. The JSON is also sent as text, as the MCP spec recommends. */
@@ -238,16 +239,47 @@ export function createServer(deps: Deps): McpServer {
     {
       title: "Re-check a replication certificate",
       description:
-        "Re-checks a certificate.v0 without trusting whoever issued it: schema, independent confirming node, and, when given, the manifest hash, claim ids and reported values against the manifest, each verdict recomputed from the values, the evidence bundle root, the attestation report hash and the step outputs. TEE attestation signatures and the on-chain record are not implemented yet and come back as planned, never as passes. Offline.",
+        "Re-checks a certificate.v0 without trusting whoever issued it: schema, independent confirming node, and, when given, the manifest hash, claim ids and reported values against the manifest, each verdict recomputed from the values, the evidence bundle root, the attestation report hash and the step outputs. With onchain: true it also reads the certificate's record from the HuygenaCertificates contract on Robinhood Chain and compares paper, hashes, nodes and every verdict. TEE attestation signatures are not implemented yet and come back as planned, never as passes. Offline unless onchain is set.",
       inputSchema: {
         certificate: z.string().min(1).max(5_000_000).describe(DOC("The certificate JSON")),
         manifest: z.string().min(1).max(5_000_000).optional().describe(DOC("The run manifest the certificate names")),
         bundle_path: z.string().min(1).max(4096).optional().describe("Evidence folder to hash and compare with the certificate's bundle root, relative to the server root."),
         ignore: IGNORE,
+        onchain: z.boolean().optional().describe("Also compare the certificate with its record on Robinhood Chain (network read, no key). Default false."),
       },
-      annotations: { title: "Re-check a replication certificate", ...READ_LOCAL },
+      annotations: { title: "Re-check a replication certificate", ...READ_WEB },
     },
     async (args) => run(deps, "verify_certificate", () => certificateVerify(deps, args)),
+  );
+
+  server.registerTool(
+    "read_bounties",
+    {
+      title: "Read replication bounties on-chain",
+      description:
+        "Reads USDG replication bounties from the HuygenaEscrow contract on Robinhood Chain: status (open or settled), USDG escrowed, deadline, the fee and confirmer share fixed when the bounty was created, and the certificate that settled it. Give id for one bounty, paper to filter by paper, or nothing for the newest. Read-only: it never posts or funds a bounty.",
+      inputSchema: {
+        id: z.number().int().positive().optional().describe("Bounty id. Omit to list."),
+        paper: z.string().min(3).max(300).optional().describe("Only bounties for this paper: doi:10.…, arxiv:…, biorxiv:…, or the bytes32 paper key."),
+        limit: z.number().int().min(1).max(100).optional().describe("How many of the newest bounties to read when listing. Default 50."),
+      },
+      annotations: { title: "Read replication bounties on-chain", ...READ_WEB },
+    },
+    async (args) => run(deps, "read_bounties", () => bountiesRead(deps, args)),
+  );
+
+  server.registerTool(
+    "read_certificate",
+    {
+      title: "Read a certificate on-chain",
+      description:
+        "Reads one replication certificate from the HuygenaCertificates contract on Robinhood Chain by run id: paper key, bounty, manifest hash, evidence bundle root, attestation hashes, runner and confirming node, one verdict per claim, evidence link and publication time. A certificate is only accepted on-chain when two different registered nodes signed the same result. Read-only.",
+      inputSchema: {
+        run_id: z.string().min(1).max(200).describe("The run id: a 0x-prefixed 32-byte hex value, or the certificate's run text (hashed with keccak256)."),
+      },
+      annotations: { title: "Read a certificate on-chain", ...READ_WEB },
+    },
+    async (args) => run(deps, "read_certificate", () => certificateRead(deps, args)),
   );
 
   // ---------- resources ----------
